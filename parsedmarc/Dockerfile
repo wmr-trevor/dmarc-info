@@ -15,3 +15,7 @@ RUN pip install wait-for-it
 RUN pip install parsedmarc
 
 COPY parsedmarc.ini /
+COPY .env /.env
+COPY updateIni.sh /updateIni.sh
+RUN chmod +x updateIni.sh
+RUN ./updateIni.sh
