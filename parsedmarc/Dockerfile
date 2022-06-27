@@ -9,8 +9,6 @@ RUN apk add build-base libxml2-dev libxslt-dev
 
 RUN pip install wait-for-it
 
-# TODO: Install + setup maxmind
-
 # install parsedmarc
 RUN pip install parsedmarc
 
