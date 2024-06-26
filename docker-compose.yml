@@ -1,15 +1,15 @@
 services:
-  # parsedmarc:
-  #   build: ./parsedmarc/
-  #   volumes:
-  #     - ./files/input:/input:ro
-  #     - ./files/output:/output
-  #     # - /etc/GeoIP.conf:/etc/GeoIP.conf
-  #     # - /usr/share/GeoIP:/usr/share/GeoIP
-  #   command: wait-for-it -t 60 --service opensearch:9200 -- parsedmarc -c /parsedmarc.ini /input/*
-  #   depends_on:
-  #     - opensearch
-  #   restart: always
+  parsedmarc:
+    build: ./parsedmarc/
+    volumes:
+      - ./files/input:/input:ro
+      - ./files/output:/output
+      # - /etc/GeoIP.conf:/etc/GeoIP.conf
+      # - /usr/share/GeoIP:/usr/share/GeoIP
+    command: wait-for-it -t 60 --service opensearch:9200 -- parsedmarc -c /parsedmarc.ini /input/*
+    depends_on:
+      - opensearch
+    restart: always
 
   # kibana:
   #   image: docker.elastic.co/kibana/kibana:7.17.4
@@ -45,7 +45,7 @@ services:
       - bootstrap.memory_lock=true
       - "OPENSEARCH_JAVA_OPTS=-Xms1G -Xmx1G"
       - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
-      # - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true" 
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true" 
     ulimits:
       memlock:
         soft: -1 # Set memlock to unlimited (no soft or hard limit)
@@ -72,8 +72,8 @@ services:
     expose:
       - "5601" # Expose port 5601 for web access to OpenSearch Dashboards
     environment:
-      - 'OPENSEARCH_HOSTS=["https://opensearch:9200"]'
-      # - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true" # disables security dashboards plugin in OpenSearch Dashboards
+      - 'OPENSEARCH_HOSTS=["http://opensearch:9200"]'
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true" # disables security dashboards plugin in OpenSearch Dashboards
 
   autoheal:
     image: willfarrell/autoheal:latest

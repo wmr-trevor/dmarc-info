@@ -4,7 +4,10 @@ network.host: 0.0.0.0
 path:
   repo:
     - /backup
+    - /migration
 
+
+plugins.security.disabled: true
 
 ######## Start OpenSearch Security Demo Configuration ########
 # WARNING: revise all the lines below before you go into production
