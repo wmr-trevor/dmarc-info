@@ -1,15 +1,15 @@
 services:
-  parsedmarc:
-    build: ./parsedmarc/
-    volumes:
-      - ./files/input:/input:ro
-      - ./files/output:/output
-      # - /etc/GeoIP.conf:/etc/GeoIP.conf
-      # - /usr/share/GeoIP:/usr/share/GeoIP
-    command: wait-for-it -t 60 --service opensearch:9200 -- parsedmarc -c /parsedmarc.ini /input/*
-    depends_on:
-      - opensearch
-    restart: always
+  # parsedmarc:
+  #   build: ./parsedmarc/
+  #   volumes:
+  #     - ./files/input:/input:ro
+  #     - ./files/output:/output
+  #     # - /etc/GeoIP.conf:/etc/GeoIP.conf
+  #     # - /usr/share/GeoIP:/usr/share/GeoIP
+  #   command: wait-for-it -t 60 --service opensearch:9200 -- parsedmarc -c /parsedmarc.ini /input/*
+  #   depends_on:
+  #     - opensearch
+  #   restart: always
 
   # kibana:
   #   image: docker.elastic.co/kibana/kibana:7.17.4
@@ -55,7 +55,8 @@ services:
         hard: 65536
     volumes:
       - open_search:/usr/share/opensearch/data
-      - /mnt/backup/dmarc:/backup:rw
+      - /mnt/backup/dmarc:/backup
+      - /mnt/backup/dmarc-migration:/migration
       - ./certs/root-ca.pem:/usr/share/opensearch/config/root-ca.pem
       - ./certs/admin.pem:/usr/share/opensearch/config/admin.pem
       - ./certs/admin-key.pem:/usr/share/opensearch/config/admin-key.pem
