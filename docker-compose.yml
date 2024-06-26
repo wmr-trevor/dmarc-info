@@ -1,39 +1,78 @@
-version: '3.5'
 services:
   parsedmarc:
     build: ./parsedmarc/
     volumes:
       - ./files/input:/input:ro
       - ./files/output:/output
-      - /etc/GeoIP.conf:/etc/GeoIP.conf
-      - /usr/share/GeoIP:/usr/share/GeoIP
-    command: wait-for-it --service elasticsearch:9200 -- parsedmarc -c /parsedmarc.ini /input/*
+      # - /etc/GeoIP.conf:/etc/GeoIP.conf
+      # - /usr/share/GeoIP:/usr/share/GeoIP
+    command: wait-for-it -t 60 --service opensearch:9200 -- parsedmarc -c /parsedmarc.ini /input/*
     depends_on:
-      - elasticsearch
+      - opensearch
     restart: always
 
-  kibana:
-    image: docker.elastic.co/kibana/kibana:7.17.4
-    volumes:
-      - ./kibana.yml:/usr/share/kibana/config/kibana.yml
-      - kibana_data:/usr/share/kibana/data
-    ports:
-      - 5601:5601
-    depends_on:
-      - elasticsearch
-    environment:
-      SERVER_NAME: kibana.wmr-cdn.com
-    restart: always
+  # kibana:
+  #   image: docker.elastic.co/kibana/kibana:7.17.4
+  #   volumes:
+  #     - ./kibana.yml:/usr/share/kibana/config/kibana.yml
+  #     - kibana_data:/usr/share/kibana/data
+  #   ports:
+  #     - 5601:5601
+  #   depends_on:
+  #     - elasticsearch
+  #   environment:
+  #     SERVER_NAME: kibana.wmr-cdn.com
+  #   restart: always
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.4
-    volumes:
-      - elastic_data:/usr/share/elasticsearch/data
+  # elasticsearch:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:7.17.4
+  #   volumes:
+  #     - elastic_data:/usr/share/elasticsearch/data
+  #     - /mnt/backup/dmarc:/backup
+  #     - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+  #   ports:
+  #     - 127.0.0.1:9200:9200
+  #   environment:
+  #     - discovery.type=single-node
+  #   restart: always
+  opensearch:
+    image: opensearchproject/opensearch:2
     ports:
-      - 127.0.0.1:9200:9200
+      - 9200:9200
+      - 9600:9600
     environment:
       - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms1G -Xmx1G"
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      # - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true" 
+    ulimits:
+      memlock:
+        soft: -1 # Set memlock to unlimited (no soft or hard limit)
+        hard: -1
+      nofile:
+        soft: 65536 # Maximum number of open files for the opensearch user - set to at least 65536
+        hard: 65536
+    volumes:
+      - open_search:/usr/share/opensearch/data
+      - /mnt/backup/dmarc:/backup:rw
+      - ./certs/root-ca.pem:/usr/share/opensearch/config/root-ca.pem
+      - ./certs/admin.pem:/usr/share/opensearch/config/admin.pem
+      - ./certs/admin-key.pem:/usr/share/opensearch/config/admin-key.pem
+      - ./certs/node1.pem:/usr/share/opensearch/config/node1.pem
+      - ./certs/node1-key.pem:/usr/share/opensearch/config/node1-key.pem
+      - ./opensearch.yml:/usr/share/opensearch/config/opensearch.yml
     restart: always
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2
+    ports:
+      - 5601:5601 # Map host port 5601 to container port 5601
+    expose:
+      - "5601" # Expose port 5601 for web access to OpenSearch Dashboards
+    environment:
+      - 'OPENSEARCH_HOSTS=["https://opensearch:9200"]'
+      # - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true" # disables security dashboards plugin in OpenSearch Dashboards
 
   autoheal:
     image: willfarrell/autoheal:latest
@@ -46,7 +85,4 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
-  kibana_data:
-    external: true
-  elastic_data:
-    external: true
+  open_search:
