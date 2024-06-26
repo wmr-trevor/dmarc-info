@@ -30,6 +30,7 @@ services:
     volumes:
       - elastic_data:/usr/share/elasticsearch/data
       - /mnt/backup/dmarc:/backup
+      - /mnt/backup/dmarc-migration:/migration
       - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     ports:
       - 127.0.0.1:9200:9200
